@@ -14,10 +14,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/rag/faiss_index
+RUN mkdir -p /app/data /app/data/faiss_index
 
-# Copy all source code including the massive semantic data
+# Copy all source code
 COPY . .
+
+# Generate the dataset and FAISS index during the build
+RUN python -m scraper.download_reviews
+RUN python -m rag.build_index
 
 # Expose the API port
 EXPOSE 8000
