@@ -1,0 +1,9 @@
+datasets==2.21.0
+pandas
+python-dotenv
+sentence-transformers
+faiss-cpu
+numpy
+openai
+fastapi
+uvicorn[standard]
