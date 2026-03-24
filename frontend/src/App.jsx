@@ -4,7 +4,8 @@ import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import InsightPanel from './components/InsightPanel'
 
-const API_BASE = 'http://localhost:8000'
+// Allow Vercel to inject the live backend URL, fallback to localhost for local dev
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 function App() {
   const [messages, setMessages] = useState([])
