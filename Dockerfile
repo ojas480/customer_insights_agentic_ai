@@ -26,5 +26,5 @@ RUN python -m rag.build_index
 # Expose the API port
 EXPOSE 8000
 
-# Start FastAPI
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start FastAPI using the dynamic $PORT provided by Render, falling back to 8000
+CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
