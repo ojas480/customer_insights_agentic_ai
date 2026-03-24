@@ -4,6 +4,7 @@ Exposes API endpoints for querying the 3-agent pipeline.
 """
 
 import os
+import threading
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,12 +46,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_PATH = os.path.join(BASE_DIR, "data", "amazon_reviews.csv")
 
 
+def init_orchestrator():
+    global orchestrator
+    print("🔧 Initializing orchestrator in background...")
+    orchestrator = AgentOrchestrator()
+    print("✅ Orchestrator loaded!")
+
 @app.on_event("startup")
 def startup():
     """Load agents and compute dataset stats on startup."""
-    global orchestrator, dataset_stats
+    global dataset_stats
 
-    orchestrator = AgentOrchestrator()
+    # Start orchestrator load in background so it doesn't block port binding
+    threading.Thread(target=init_orchestrator, daemon=True).start()
 
     # Compute dataset stats
     if os.path.exists(CSV_PATH):
