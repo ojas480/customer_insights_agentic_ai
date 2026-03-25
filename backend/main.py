@@ -66,7 +66,7 @@ def startup():
     # Start orchestrator load in background so it doesn't block port binding
     threading.Thread(target=init_orchestrator, daemon=True).start()
 
-    # Compute dataset stats
+    # Compute dataset stats (then free the dataframe)
     if os.path.exists(CSV_PATH):
         df = pd.read_csv(CSV_PATH)
         rating_dist = df["rating"].value_counts().sort_index().to_dict()
@@ -76,6 +76,7 @@ def startup():
             "category": "All Beauty",
             "rating_distribution": {str(int(k)): int(v) for k, v in rating_dist.items()},
         }
+        del df  # free memory before loading agents
 
 
 @app.get("/api/health")

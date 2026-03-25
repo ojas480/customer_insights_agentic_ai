@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements entirely
 COPY requirements.txt .
 
-# Install dependencies (ignoring faiss-cpu issues by ensuring we use pure python or simple compiled wheels)
+# Install CPU-only PyTorch FIRST (avoids pulling ~1.5GB of CUDA packages)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories

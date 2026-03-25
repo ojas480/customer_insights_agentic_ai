@@ -1,0 +1,18 @@
+# Dependencies & caches
+frontend/node_modules
+frontend/dist
+__pycache__
+*.pyc
+.env
+
+# Git & IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Data generated at build time
+data/
+
+# Test files
+test_*.py
