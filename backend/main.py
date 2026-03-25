@@ -6,9 +6,12 @@ Exposes API endpoints for querying the 3-agent pipeline.
 import os
 import threading
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from agents.orchestrator import AgentOrchestrator
 from backend.schemas import (
@@ -23,11 +26,16 @@ from backend.schemas import (
 
 load_dotenv()
 
+# Rate limiter: keyed by client IP
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="CustomerInsight API",
     description="3-Agent RAG pipeline for analyzing Amazon product reviews",
     version="1.0.0",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS for frontend dev server
 app.add_middleware(
@@ -81,19 +89,22 @@ def startup():
 
 
 @app.get("/api/health")
-def health():
+@limiter.limit("60/minute")
+def health(request: Request):
     return {"status": "ok", "agents_loaded": orchestrator is not None}
 
 
 @app.get("/api/stats", response_model=StatsResponse)
-def stats():
+@limiter.limit("60/minute")
+def stats(request: Request):
     if not dataset_stats:
         raise HTTPException(status_code=503, detail="Stats not loaded")
     return dataset_stats
 
 
 @app.post("/api/query", response_model=QueryResponse)
-def query(req: QueryRequest):
+@limiter.limit("10/minute")
+def query(request: Request, req: QueryRequest):
     """Run the 3-agent pipeline for a user query."""
     if not orchestrator:
         raise HTTPException(status_code=503, detail="Agents not initialized")
